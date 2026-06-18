@@ -36,37 +36,29 @@ async function loadStocks() {
   for (let t of tickers) {
     t = t.trim();
 
-    let price, high, low;
+    let symbol = t;
+
+    // 日本株変換（7203 → TSE:7203）
+    if (/^\d{4}$/.test(t)) {
+      symbol = "TSE:" + t;
+    }
 
     try {
-      // 日本株
-      if (/^\d{4}$/.test(t)) {
-        const url = `ttps://api.allorigins.win/raw?url=https://stooq.com/q/l/?s=${t}.jp&f=sd2t2ohlcv&h&e=csv`;
-        const res = await fetch(url);
-        const text = await res.text();
-        const row = text.split("\n")[1].split(",");
+      const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`;
 
-        price = row[6];
-        high = row[4];
-        low = row[5];
+      const res = await fetch(url);
+      const data = await res.json();
 
-      } else {
-        // 米株
-        const url = `https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        price = data.c;
-        high = data.h;
-        low = data.l;
+      if (!data.c) {
+        throw new Error("データなし");
       }
 
       table.innerHTML += `
         <tr>
           <td>${t}</td>
-          <td>${price}</td>
-          <td>${high}</td>
-          <td>${low}</td>
+          <td>${data.c}</td>
+          <td>${data.h}</td>
+          <td>${data.l}</td>
         </tr>
       `;
 
