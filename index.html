@@ -1,33 +1,53 @@
-async function getStock() {
-  try {
-    const ticker = document.getElementById("ticker").value;
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>株価アプリ</title>
+</head>
+<body>
 
-    const url =
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+  <h1>株価チェック</h1>
 
-    const res = await fetch(url);
+  <input type="text" id="ticker" placeholder="例: 7203.T">
+  <button onclick="getStock()">取得</button>
 
-    if (!res.ok) {
-      throw new Error("通信失敗");
+  <div id="result"></div>
+
+  <script>
+    async function getStock() {
+      try {
+        const ticker = document.getElementById("ticker").value;
+
+        const url =
+          `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+
+        const res = await fetch(url);
+
+        if (!res.ok) {
+          throw new Error("通信失敗");
+        }
+
+        const data = await res.json();
+
+        if (!data.quoteResponse.result.length) {
+          document.getElementById("result").innerHTML =
+            "銘柄が見つかりません（例: 7203.T）";
+          return;
+        }
+
+        const stock = data.quoteResponse.result[0];
+
+        document.getElementById("result").innerHTML = `
+          <p>株価: ${stock.regularMarketPrice}</p>
+          <p>52週高値: ${stock.fiftyTwoWeekHigh}</p>
+          <p>52週安値: ${stock.fiftyTwoWeekLow}</p>
+        `;
+      } catch (e) {
+        document.getElementById("result").innerHTML =
+          "エラー発生：" + e.message;
+      }
     }
+  </script>
 
-    const data = await res.json();
-
-    if (!data.quoteResponse.result.length) {
-      document.getElementById("result").innerHTML =
-        "銘柄が見つかりません（例: 7203.T）";
-      return;
-    }
-
-    const stock = data.quoteResponse.result[0];
-
-    document.getElementById("result").innerHTML = `
-      <p>株価: ${stock.regularMarketPrice}</p>
-      <p>52週高値: ${stock.fiftyTwoWeekHigh}</p>
-      <p>52週安値: ${stock.fiftyTwoWeekLow}</p>
-    `;
-  } catch (e) {
-    document.getElementById("result").innerHTML =
-      "エラー発生：" + e.message;
-  }
-}
+</body>
+</html>
