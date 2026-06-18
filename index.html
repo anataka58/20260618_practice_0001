@@ -8,43 +8,47 @@
 
   <h1>株価チェック</h1>
 
-  <input type="text" id="ticker" placeholder="例: 7203.T">
+  <input type="text" id="ticker" placeholder="例: AAPL or 7203.T">
   <button onclick="getStock()">取得</button>
 
   <div id="result"></div>
 
   <script>
+    const API_KEY = "ここにあなたのAPIキー";
+
     async function getStock() {
       try {
-        const ticker = document.getElementById("ticker").value;
+        let ticker = document.getElementById("ticker").value.trim();
 
-        const url =
-          `https://corsproxy.io/?https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
-
-        const res = await fetch(url);
-
-        if (!res.ok) {
-          throw new Error("通信失敗");
+        // 日本株対応（7203 → 7203.T）
+        if (/^\d{4}$/.test(ticker)) {
+          ticker = ticker + ".T";
         }
 
+        // Finnhubは .T じゃなく .TSE の場合あり
+        ticker = ticker.replace(".T", ".TSE");
+
+        const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
+
+        const res = await fetch(url);
         const data = await res.json();
 
-        if (!data.quoteResponse.result.length) {
+        if (!data.c) {
           document.getElementById("result").innerHTML =
-            "銘柄が見つかりません（例: 7203.T）";
+            "データ取得失敗（銘柄 or API制限）";
           return;
         }
 
-        const stock = data.quoteResponse.result[0];
-
         document.getElementById("result").innerHTML = `
-          <p>株価: ${stock.regularMarketPrice}</p>
-          <p>52週高値: ${stock.fiftyTwoWeekHigh}</p>
-          <p>52週安値: ${stock.fiftyTwoWeekLow}</p>
+          <p>現在株価: ${data.c}</p>
+          <p>高値: ${data.h}</p>
+          <p>安値: ${data.l}</p>
+          <p>前日終値: ${data.pc}</p>
         `;
+
       } catch (e) {
         document.getElementById("result").innerHTML =
-          "エラー発生：" + e.message;
+          "エラー：" + e.message;
       }
     }
   </script>
