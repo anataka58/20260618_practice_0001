@@ -19,7 +19,7 @@
         const ticker = document.getElementById("ticker").value;
 
         const url =
-          `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+          `https://corsproxy.io/?https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
 
         const res = await fetch(url);
 
