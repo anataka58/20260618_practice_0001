@@ -41,7 +41,7 @@ async function loadStocks() {
     try {
       // 日本株
       if (/^\d{4}$/.test(t)) {
-        const url = `https://stooq.com/q/l/?s=${t}.jp&f=sd2t2ohlcv&h&e=csv`;
+        const url = `ttps://api.allorigins.win/raw?url=https://stooq.com/q/l/?s=${t}.jp&f=sd2t2ohlcv&h&e=csv`;
         const res = await fetch(url);
         const text = await res.text();
         const row = text.split("\n")[1].split(",");
