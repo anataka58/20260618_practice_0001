@@ -1,57 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>株価アプリ</title>
+<meta charset="UTF-8">
+<title>投資ダッシュボード</title>
 </head>
 <body>
 
-  <h1>株価チェック</h1>
+<h1>投資ダッシュボード</h1>
 
-  <input type="text" id="ticker" placeholder="例: AAPL or 7203.T">
-  <button onclick="getStock()">取得</button>
+<input type="text" id="tickers" placeholder="例: 7203,6758,AAPL">
+<button onclick="loadStocks()">取得</button>
 
-  <div id="result"></div>
+<table border="1">
+<thead>
+<tr>
+<th>銘柄</th>
+<th>株価</th>
+<th>高値</th>
+<th>安値</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
 
-  <script>
-    const API_KEY = "d8pvan9r01qr03ncira0d8pvan9r01qr03ncirag";
+<script>
+const API_KEY = "d8pvan9r01qr03ncira0d8pvan9r01qr03ncirag";
 
-    async function getStock() {
-      try {
-        let ticker = document.getElementById("ticker").value.trim();
+async function loadStocks() {
+  const input = document.getElementById("tickers").value;
+  const tickers = input.split(",");
 
-        // 日本株対応（7203 → 7203.T）
-        if (/^\d{4}$/.test(ticker)) {
-          ticker = ticker + ".T";
-        }
+  const table = document.getElementById("table");
+  table.innerHTML = "";
 
-        // Finnhubは .T じゃなく .TSE の場合あり
-        ticker = ticker.replace(".T", ".TSE");
+  for (let t of tickers) {
+    t = t.trim();
 
-        const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
+    let price, high, low;
 
+    try {
+      // 日本株
+      if (/^\d{4}$/.test(t)) {
+        const url = `https://stooq.com/q/l/?s=${t}.jp&f=sd2t2ohlcv&h&e=csv`;
+        const res = await fetch(url);
+        const text = await res.text();
+        const row = text.split("\n")[1].split(",");
+
+        price = row[6];
+        high = row[4];
+        low = row[5];
+
+      } else {
+        // 米株
+        const url = `https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`;
         const res = await fetch(url);
         const data = await res.json();
 
-        if (!data.c) {
-          document.getElementById("result").innerHTML =
-            "データ取得失敗（銘柄 or API制限）";
-          return;
-        }
-
-        document.getElementById("result").innerHTML = `
-          <p>現在株価: ${data.c}</p>
-          <p>高値: ${data.h}</p>
-          <p>安値: ${data.l}</p>
-          <p>前日終値: ${data.pc}</p>
-        `;
-
-      } catch (e) {
-        document.getElementById("result").innerHTML =
-          "エラー：" + e.message;
+        price = data.c;
+        high = data.h;
+        low = data.l;
       }
+
+      table.innerHTML += `
+        <tr>
+          <td>${t}</td>
+          <td>${price}</td>
+          <td>${high}</td>
+          <td>${low}</td>
+        </tr>
+      `;
+
+    } catch (e) {
+      table.innerHTML += `
+        <tr>
+          <td>${t}</td>
+          <td colspan="3">エラー</td>
+        </tr>
+      `;
     }
-  </script>
+  }
+}
+</script>
 
 </body>
 </html>
